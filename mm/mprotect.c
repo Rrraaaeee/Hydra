@@ -119,6 +119,9 @@ static long change_pte_range(struct mmu_gather *tlb,
 	arch_enter_lazy_mmu_mode();
 	do {
 		oldpte = *pte;
+		if (vma->vm_mm->lazy_repl_enabled && ((virt_to_page(pte))->next_replica)) {
+				oldpte = pgtable_repl_get_pte(pte);
+		}
 		if (pte_present(oldpte)) {
 			pte_t ptent;
 
@@ -535,7 +538,11 @@ static long change_protection_range(struct mmu_gather *tlb,
 	long pages = 0, ret;
 
 	BUG_ON(addr >= end);
-	pgd = pgd_offset(mm, addr);
+	if (mm->lazy_repl_enabled) {
+		pgd = pgd_offset_node(mm, addr, vma->master_pgd_node);
+	} else {
+		pgd = pgd_offset(mm, addr);
+	}
 	tlb_start_vma(tlb, vma);
 	do {
 		next = pgd_addr_end(addr, end);
@@ -579,9 +586,10 @@ long change_protection(struct mmu_gather *tlb,
 	if (is_vm_hugetlb_page(vma))
 		pages = hugetlb_change_protection(vma, start, end, newprot,
 						  cp_flags);
-	else
+	else {
 		pages = change_protection_range(tlb, vma, start, end, newprot,
 						cp_flags);
+    }
 
 	return pages;
 }
