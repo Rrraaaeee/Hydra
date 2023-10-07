@@ -36,6 +36,10 @@
 #include <asm/mmu_context.h>
 #include <asm/tlbflush.h>
 #include <asm/tlb.h>
+#include <linux/hydra_util.h>
+#include <linux/hydra_debug.h>
+
+
 
 #include "internal.h"
 
@@ -819,6 +823,13 @@ static int do_mprotect_pkey(unsigned long start, size_t len,
 			break;
 		}
 
+		if (vma->vm_mm->lazy_repl_enabled && sysctl_hydra_tlbflush_opt) {
+			pte_t *pte = hydra_find_pte(vma->vm_mm, nstart, vma->master_pgd_node);
+			if (!HYDRA_FIND_BAD(pte)) {
+				hydra_calculate_tlbflush_nodemask(virt_to_page(pte), &tlb.nodemask);
+			}
+		}
+
 		/* Does the application expect PROT_READ to imply PROT_EXEC */
 		if (rier && (vma->vm_flags & VM_MAYEXEC))
 			prot |= PROT_EXEC;
@@ -872,8 +883,12 @@ static int do_mprotect_pkey(unsigned long start, size_t len,
 		tmp = vma_iter_end(&vmi);
 		nstart = tmp;
 		prot = reqprot;
-	}
+
+	tlb.collect_nodemask = 1;
 	tlb_finish_mmu(&tlb);
+	tlb.collect_nodemask = 0;
+	}
+
 
 	if (!error && tmp < end)
 		error = -ENOMEM;

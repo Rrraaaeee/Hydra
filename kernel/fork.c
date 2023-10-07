@@ -1317,14 +1317,12 @@ static struct mm_struct *mm_init(struct mm_struct *mm, struct task_struct *p,
 		if (percpu_counter_init(&mm->rss_stat[i], 0, GFP_KERNEL_ACCOUNT))
 			goto fail_pcpu;
 
+	lru_gen_init_mm(mm);
 	mm->user_ns = get_user_ns(user_ns);
 
-    printk("Hydra: mminit from node: %d\n", numa_node_id());
 	mm->repl_pgd[0] = mm->pgd;
-    /* printk("Hydra: original pgd: %lx\n", (long int)mm->repl_pgd[0]); */
 	for (i=1; i < NUMA_NODE_COUNT; i++) {
 		mm->repl_pgd[i] = repl_pgd_alloc(mm, i);
-        /* printk("Hydra: replicated pgd: %lx\n", (long int)mm->repl_pgd[i]); */
 	}
 
 	return mm;
@@ -1762,7 +1760,7 @@ static int copy_mm(unsigned long clone_flags, struct task_struct *tsk)
 	if (clone_flags & CLONE_VM) {
 		mmget(oldmm);
 		mm = oldmm;
-		printk("Lazy Page replication status is %d\n", mm->lazy_repl_enabled);
+		// printk("Lazy Page replication status is %d\n", mm->lazy_repl_enabled);
 	} else {
 		mm = dup_mm(tsk, current->mm);
 		if (!mm)

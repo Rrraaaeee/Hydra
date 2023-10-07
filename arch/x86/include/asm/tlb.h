@@ -11,24 +11,19 @@ static inline void tlb_flush(struct mmu_gather *tlb)
 {
 	unsigned long start = 0UL, end = TLB_FLUSH_ALL;
 	unsigned int stride_shift = tlb_get_unmap_shift(tlb);
-    // printk("Calling tlb flush!\n");
 
 	if (!tlb->fullmm && !tlb->need_flush_all) {
 		start = tlb->start;
 		end = tlb->end;
 
         if (tlb->collect_nodemask) {
-            // printk("Flush mm_node_range!\n");
-            flush_tlb_mm_node_range(tlb->mm, tlb->start, tlb->end, stride_shift, tlb->freed_tables, &tlb->nodemask);
+            flush_tlb_mm_node_range(tlb->mm, start, end, stride_shift, tlb->freed_tables, &tlb->nodemask);
         } else if (tlb->vma) {
-            // printk("Flush vma_range!\n");
-            flush_tlb_vma_range(tlb->vma, tlb->start, tlb->end, stride_shift, tlb->freed_tables);
+            flush_tlb_vma_range(tlb->vma, start, end, stride_shift, tlb->freed_tables);
         } else {
-            // printk("Flush tlb_mm_range!\n");
-	        flush_tlb_mm_range(tlb->mm, start, end, stride_shift, tlb->freed_tables);
+	    flush_tlb_mm_range(tlb->mm, start, end, stride_shift, tlb->freed_tables);
         }
 	} else {
-        // printk("Flush mm__range!\n");
 	    flush_tlb_mm_range(tlb->mm, start, end, stride_shift, tlb->freed_tables);
     }
 }

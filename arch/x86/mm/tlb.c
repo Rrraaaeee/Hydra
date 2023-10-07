@@ -642,6 +642,8 @@ void switch_mm_irqs_off(struct mm_struct *prev, struct mm_struct *next,
 
 	}
 
+	set_tlbstate_lam_mode(next);
+
 		if (next->lazy_repl_enabled) {
             /* printk("Next pdg use repl[%d]\n", numa_node_id()); */
 			next_pgd = next->repl_pgd[numa_node_id()];
@@ -650,7 +652,6 @@ void switch_mm_irqs_off(struct mm_struct *prev, struct mm_struct *next,
 		}
 
 
-	set_tlbstate_lam_mode(next);
 	if (need_flush) {
 		this_cpu_write(cpu_tlbstate.ctxs[new_asid].ctx_id, next->context.ctx_id);
 		this_cpu_write(cpu_tlbstate.ctxs[new_asid].tlb_gen, next_tlb_gen);
@@ -1088,11 +1089,11 @@ void flush_tlb_vma_range(struct vm_area_struct *vma, unsigned long start,
 		if (!HYDRA_FIND_BAD(pte)) {
 			nodes_clear(nodemask);
 			hydra_calculate_tlbflush_nodemask(virt_to_page(pte), &nodemask);
-	        flush_tlb_mm_node_range(vma->vm_mm, start, end, stride_shift, 0UL, &nodemask);
+	        flush_tlb_mm_node_range(vma->vm_mm, start, end, stride_shift, freed_tables, &nodemask);
 			return;
 		}
 	}
-	flush_tlb_mm_node_range(vma->vm_mm, start, end, stride_shift, 0UL, NULL);
+	flush_tlb_mm_node_range(vma->vm_mm, start, end, stride_shift, freed_tables, NULL);
 }
 
 static void do_flush_tlb_all(void *info)

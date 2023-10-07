@@ -60,6 +60,7 @@ static inline int hydra_collect_repl_nodes(struct page *const ptpage, nodemask_t
 		}
 		node_set(page_to_nid(current_page), *nodemask);
 		current_page = current_page->next_replica;
+		if (current_page == NULL) break;
 		++replicas_seen;
 		if (current_page != ptpage && replicas_seen == NUMA_NODE_COUNT){
 			node_set(page_to_nid(current_page), *nodemask);

@@ -1377,14 +1377,14 @@ copy_page_range(struct vm_area_struct *dst_vma, struct vm_area_struct *src_vma)
 
 	ret = 0;
 	if (dst_mm->lazy_repl_enabled) {
-		printk("Copying from node %ld\n", src_vma->master_pgd_node);
-		dst_pgd = pgd_offset_node(dst_mm, addr, src_vma->master_pgd_node);
+		printk("Copying from node %ld\n", dst_vma->master_pgd_node);
+		dst_pgd = pgd_offset_node(dst_mm, addr, dst_vma->master_pgd_node);
 	} else {
 		dst_pgd = pgd_offset(dst_mm, addr);
 	}
 
 	if (src_mm->lazy_repl_enabled) {
-		printk("Copying to node %ld\n", dst_vma->master_pgd_node);
+		printk("Copying to node %ld\n", src_vma->master_pgd_node);
 		src_pgd = pgd_offset_node(src_mm, addr, src_vma->master_pgd_node);
 	} else {
 		src_pgd = pgd_offset(src_mm, addr);
