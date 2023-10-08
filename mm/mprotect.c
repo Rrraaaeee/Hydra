@@ -826,6 +826,7 @@ static int do_mprotect_pkey(unsigned long start, size_t len,
 		if (vma->vm_mm->lazy_repl_enabled && sysctl_hydra_tlbflush_opt) {
 			pte_t *pte = hydra_find_pte(vma->vm_mm, nstart, vma->master_pgd_node);
 			if (!HYDRA_FIND_BAD(pte)) {
+				nodes_clear(tlb.nodemask);
 				hydra_calculate_tlbflush_nodemask(virt_to_page(pte), &tlb.nodemask);
 			}
 		}
